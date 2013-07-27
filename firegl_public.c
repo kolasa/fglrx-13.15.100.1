@@ -6219,10 +6219,17 @@ void * KCL_create_proc_dir(void *root_dir, const char *name, unsigned int access
     struct proc_dir_entry *dir = NULL;
 
     if (root_dir == NULL)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)
          dir = create_proc_entry(name, S_IFDIR | access, firegl_stub_root);
+#else
+         dir = proc_mkdir(name, firegl_stub_root);
+#endif
     else
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)
          dir = create_proc_entry(name, S_IFDIR | access, (struct proc_dir_entry *)root_dir);
-
+#else
+         dir = proc_mkdir(name, (struct proc_dir_entry *)root_dir);
+#endif
     return dir;
 }
 
@@ -6251,13 +6258,18 @@ void KCL_create_proc_entry(void *root_dir, const char *name, unsigned int access
     if (root_dir == NULL || name == NULL)
         return;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)
     ent = create_proc_entry(name, access_mode, (struct proc_dir_entry *)root_dir);
-
+#else
+    ent = proc_create_data(name, access_mode, (struct proc_dir_entry *)root_dir, &firegl_fops, private_data);
+#endif
     if (ent)
     {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)
         ent->read_proc = (read_proc_t *)read_fn;    
         ent->write_proc = (write_proc_t *)write_fn; 
         ent->data = private_data;
+#endif
     }
 }
 
